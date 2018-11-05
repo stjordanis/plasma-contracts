@@ -6,6 +6,7 @@ import "./PlasmaRLP.sol";
 import "./Merkle.sol";
 import "./Validate.sol";
 import "./PriorityQueue.sol";
+import "./PlasmaCore.sol";
 
 import "./ERC20.sol";
 
@@ -18,6 +19,10 @@ contract RootChain {
     using SafeMath for uint256;
     using Merkle for bytes32;
     using PlasmaRLP for bytes;
+    using PlasmaCore for bytes;
+    using PlasmaCore for PlasmaCore.TransactionInput;
+    using PlasmaCore for uint192;
+    using PlasmaCore for uint256;
 
 
     /*
@@ -46,6 +51,28 @@ contract RootChain {
         address token
     );
 
+    event InFlightExitStarted(
+        address indexed initiator,
+        bytes32 txHash
+    );
+
+    event InFlightExitPiggybacked(
+        address indexed owner,
+        bytes32 txHash,
+        uint256 outputIndex
+    );
+
+    event InFlightExitChallenged(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 challengeTxPosition
+    );
+
+    event InFlightExitOutputBlocked(
+        address indexed challenger,
+        bytes32 txHash,
+        uint256 outputId
+    );
 
     /*
      * Storage
