@@ -335,6 +335,76 @@ contract RootChain {
         }
     }
 
+    function startInFlightExit(
+        bytes _inFlightTx,
+        bytes _inputTxs,
+        bytes _inputTxsInclusionProofs,
+        bytes _inFlightTxSigs
+    )
+        public
+        payable
+    {
+        emit InFlightExitStarted(msg.sender, keccak256(_inFlightTx));
+    }
+
+    function piggybackInFlightExit(
+        bytes _inFlightTx,
+        uint8 _outputIndex
+    )
+        public
+        payable
+    {
+        emit InFlightExitPiggybacked(msg.sender, keccak256(_inFlightTx), _outputIndex);
+    }
+
+    function challengeInFlightExitNotCanonical(
+        bytes _inFlightTx,
+        uint8 _inFlightTxInputIndex,
+        bytes _competingTx,
+        uint8 _competingTxInputIndex,
+        uint256 _competingTxId,
+        bytes _competingTxInclusionProof,
+        bytes _competingTxSig
+    )
+        public
+    {
+        emit InFlightExitChallenged(msg.sender, keccak256(_inFlightTx), _competingTxId);
+    }
+
+    function respondToNonCanonicalChallenge(
+        bytes _inFlightTx,
+        uint256 _inFlightTxId,
+        bytes _inFlightTxInclusionProof
+    )
+        public
+    {
+    }
+
+    function challengeInFlightExitInputSpent(
+        bytes _inFlightTx,
+        uint8 _inFlightTxInputIndex,
+        bytes _spendingTx,
+        uint8 _spendingTxInputIndex,
+        bytes _spendingTxSig
+    )
+        public
+    {
+//        uint256 inputId = _inFlightTx.getInputId(_inFlightTxInputIndex);
+//        emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), inputId);
+    }
+
+    function challengeInFlightExitOutputSpent(
+        bytes _inFlightTx,
+        uint256 _inFlightTxOutputId,
+        bytes _inFlightTxInclusionProof,
+        bytes _spendingTx,
+        uint256 _spendingTxInputIndex,
+        bytes _spendingTxSig
+    )
+        public
+    {
+        emit InFlightExitOutputBlocked(msg.sender, keccak256(_inFlightTx), _inFlightTxOutputId);
+    }
 
     /*
      * Public view functions
