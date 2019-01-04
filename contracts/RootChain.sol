@@ -347,8 +347,10 @@ contract RootChain {
 
         InFlightExit storage inFlightExit = _getInFlightExit(_outputTx);
         if (inFlightExit.exitStartTimestamp != 0) {
+            // OMG-314. 9
             // Check if this output was piggybacked or exited in in-flight exit
             require(!inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS) && !inFlightExit.exitMap.bitSet(oindex + MAX_INPUTS + MAX_INPUTS*2));
+            // OMG-314. 7
             // Prevent future piggybacks on this output
             inFlightExit.exitMap = inFlightExit.exitMap.setBit(oindex + MAX_INPUTS + MAX_INPUTS*2);
         }
@@ -382,6 +384,8 @@ contract RootChain {
     function challengeStandardExit(uint192 _standardExitId, bytes _challengeTx, uint256 _inputIndex, bytes _challengeTxSig)
         public
     {
+        // OMG-314. 3
+        // OMG-314. 4
         // Check that the output is being used as an input to the challenging tx.
         uint256 inputId = _challengeTx.getInputId(_inputIndex);
         require(inputId == exits[_standardExitId].position);
@@ -511,6 +515,7 @@ contract RootChain {
         inFlightExit.exitStartTimestamp = block.timestamp;
         // If any of the inputs were finalized via standard exit, consider it non-canonical
         // and flag as not taking part in further canonicity game.
+        // OMG-314. 2
         if (any_finalized) {
             inFlightExit.exitStartTimestamp = flagSpentInput(inFlightExit.exitStartTimestamp);
         }
@@ -549,6 +554,8 @@ contract RootChain {
         onlyWithValue(piggybackBond)
     {
         bytes32 txhash = keccak256(_inFlightTx);
+        // OMG-314. 5
+        // OMG-314. 6
         // Check if SE is not started nor finalized
         require(exits[getStandardExitId(txhash, _outputIndex)].amount == 0);
 
@@ -1139,6 +1146,7 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
 
         // Challenge exiting standard exits from inputs
+        // OMG-314. 1
         already_finalized = cleanupDoublespendingStandardExits(inputId, _inputTx);
 
         return (input, inputId, already_finalized);

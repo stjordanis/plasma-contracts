@@ -116,6 +116,8 @@ def test_challenge_standard_exit_wrong_oindex_should_fail(testlang):
 
 
 def test_challenge_standard_exit_with_in_flight_exit_tx_should_succeed(ethtester, testlang):
+    # OMG-314. 3 test
+    # OMG-314. 4 test
     owner, amount = testlang.accounts[0], 100
     deposit_id = testlang.deposit(owner, amount)
     spend_id = testlang.spend_utxo([deposit_id], [owner.key], outputs=[(owner.address, NULL_ADDRESS, amount)])
