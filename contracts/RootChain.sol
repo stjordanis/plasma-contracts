@@ -208,7 +208,7 @@ contract RootChain {
     {
         require(!hasToken(_token));
         exitsQueues[_token] = PriorityQueueFactory.deploy(this);
-        TokenAdded(_token);
+        emit TokenAdded(_token);
     }
 
     /**
@@ -392,23 +392,23 @@ contract RootChain {
         bytes32 txHash = keccak256(_challengeTx);
         require(owner == ECRecovery.recover(txHash, _challengeTxSig));
 
-        processChallengeStandardExit(challengedUtxoPos, _standardExitId);
+        _processChallengeStandardExit(challengedUtxoPos, _standardExitId);
     }
 
-    function cleanupDoubleSpendingStandardExits(uint256 _utxoPos, bytes _txbytes)
+    function _cleanupDoubleSpendingStandardExits(uint256 _utxoPos, bytes _txbytes)
         internal
         returns (bool)
     {
         uint8 oindex = _utxoPos.getOindex();
         uint192 standardExitId = getStandardExitId(keccak256(_txbytes), oindex);
         if (exits[standardExitId].owner != address(0)) {
-            processChallengeStandardExit(_utxoPos, standardExitId);
+            _processChallengeStandardExit(_utxoPos, standardExitId);
             return false;
         }
         return exits[standardExitId].amount != 0;
     }
 
-    function processChallengeStandardExit(uint256 _utxoPos, uint192 _exitId)
+    function _processChallengeStandardExit(uint256 _utxoPos, uint192 _exitId)
         internal
     {
         // Delete the exit.
@@ -489,12 +489,13 @@ contract RootChain {
         // `vars` is an ugly hack - workaround for "stack too deep" error
         uint256[3] memory vars;
         bool finalized;
-        bool any_finalized;
+        bool any_finalized = false;
         for (uint8 i = 0; i < numInputs; i++) {
             // vars[0] contains txo position of the input
             (inFlightExit.inputs[i], vars[0], finalized) = _getInputInfo(_inFlightTx, splitInputTxs[i].toBytes(), _inputTxsInclusionProofs, _inFlightTxSigs.sliceSignature(i), i);
             require(inFlightExit.inputs[i].token == address(0));
             // vars[1] tracks sum of the inputs
+            // TODO: sum by tokens
             vars[1] += inFlightExit.inputs[i].amount;
             // vars[2] tracks youngest of inputs for this in-flight exit
             vars[2] = Math.max(vars[2], vars[0]);
@@ -502,7 +503,7 @@ contract RootChain {
         }
 
         // Make sure the sums are valid.
-        require(vars[1] >= outputSum);
+        require(vars[1] >= outputSum); // TODO: just check inputs against outputs sums in a function
 
         // Determine when the exit can be processed.
         _enqueueInFlightExit(vars[2], _inFlightTx);
@@ -1139,7 +1140,7 @@ contract RootChain {
         require(input.owner == ECRecovery.recover(keccak256(_tx), _inputSig));
 
         // Challenge exiting standard exits from inputs
-        already_finalized = cleanupDoubleSpendingStandardExits(inputUtxoPos, _inputTx);
+        already_finalized = _cleanupDoubleSpendingStandardExits(inputUtxoPos, _inputTx);
 
         return (input, inputUtxoPos, already_finalized);
     }
